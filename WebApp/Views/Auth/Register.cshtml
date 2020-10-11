@@ -1,0 +1,61 @@
+﻿@model WebApp.Models.User.RegisterForm
+@{
+    Layout = "";
+}
+
+<!DOCTYPE html>
+<html>
+<head>
+    <style>
+        body {
+            background-image: url("../assets/bg1.jpg");
+            background-position: center;
+            background-repeat: no-repeat;
+            background-size: cover;
+            background-attachment: fixed;
+            display: grid;
+            grid-template-rows: 48px minmax(100px,auto) 1fr 50px;
+            grid-gap: 2px;
+            height: 100vh;
+            margin: 0;
+        }
+    </style>
+    <link rel="stylesheet" href="~/css/register.css">
+</head>
+<body>
+    <img src="~/assets/student.jfif" class="studentimg" style="max-height: 350px; position: absolute; top: 30%; left: 150px; border-radius: 10px;">
+    <img src="~/assets/teacher.jpeg" class="teacherimg" style="max-height: 350px; position: absolute; top: 30%; right: 150px; border-radius: 10px;">
+
+    <form onsubmit="sendAJAX(event)">
+        <div class="container">
+            <h1 class="registerword">Register</h1>
+            <p style="position: absolute; top: 190px; left: 35%; font-size: 15px">Please fill in this form to create an account.</p>
+            <br>
+            <label asp-for="DisplayName" style="position: absolute; top: 230px; left: 35%; color: white;"><b>Display Name</b></label>
+            <br>
+            <input asp-for="DisplayName" placeholder="Enter Your Name" required style="width: 500px; position: absolute; top: 250px; left: 35%">
+            <br>
+            <label asp-for="Email" style="position: absolute; top: 330px; left: 35%; color: white;"><b>Email</b></label>
+            <br>
+            <input asp-for="Email" required style="width: 500px;position: absolute; top: 350px; left: 35%">
+            <br>
+
+            <label asp-for="Password" style="position: absolute; top: 430px; left: 35%; color: white;"><b>Password</b></label>
+            <br>
+            <input asp-for="Password" type="password" placeholder="Enter Password" required style="width: 500px;position: absolute; top: 450px; left: 35%">
+            <br>
+
+
+            <p style="position: absolute; top: 650px; left: 35%">By creating an account you agree to our <a href="#" style="color: darkblue;">Terms & Privacy</a></p>
+            <button type="submit" class="registerbtn" style="position: absolute; top: 700px; left: 35%; width: 500px;">Register</button>
+        </div>
+
+        <div class="container signin" style="position: absolute; top: 800px; left: 35%">
+            <p>Already have an account? <a asp-action="Login" style="color: darkblue">Sign in</a>.</p>
+        </div>
+    </form>
+
+
+    <script type="text/javascript" src="~/js/ajaxFormSender.js"></script>
+</body>
+</html>

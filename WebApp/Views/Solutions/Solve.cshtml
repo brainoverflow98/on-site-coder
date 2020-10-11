@@ -1,0 +1,288 @@
+﻿@model SolutionEnvironmentVm
+@{
+    ViewData["Title"] = "Explore";
+}
+
+@section Styles {
+    <style>
+
+        body {
+            background: linear-gradient(209.64deg, rgba(60, 72, 211, 0.75) 4.22%, rgba(76, 143, 239, 0.75) 63.76%, rgba(127, 240, 255, 0.75) 86.94%);
+            grid-template-areas: "header header" "nav code" "nav code" "footer footer";
+            grid-template-columns: 200px 1fr;
+            overflow-x: hidden;
+        }
+
+        #mainNav {
+            background-color: lightblue;
+        }
+
+        #question {
+            width: 620px;
+        }
+
+        td, th {
+            border: 1px solid #dddddd;
+            text-align: left;
+            padding: 8px;
+            max-width: 100px;
+        }
+
+        th {
+            background-color: lightblue;
+        }
+    </style>
+}
+
+<nav id="mainNav">
+
+    <p style="text-align: center;">SOLUTION FILES</p>
+    <div id="file_sec">
+
+        <button id="add_file_button" class="save-run" style="width: 50%; margin-left: 5px;" >Add File</button>
+
+        <input id="newfile_name" placeholder="Enter File Name..." style="margin-left: 5px;">
+
+        @if (Model.FileNames != null)
+            @foreach (var fn in Model.FileNames)
+            {
+                <div id="@fn">
+                    <a href="/GetFile/@fn/@Model.SolutionId" class="files" this.style.color='red';">@fn</a>
+                    <span class="remove_field"><img src="~/assets/x.png" width="20px" height="20px"></span>
+                </div>
+            }
+    </div>
+    
+
+
+
+    <br>
+    <p style="text-align: center;">INPUT FILES</p>
+    @if (Model.InputFileNames != null)
+        @foreach (var fn in Model.InputFileNames)
+        {
+            <div><a href="/GetInputFile/@fn/@Model.ChallengeId" class="files" this.style.color='red';">@fn</a></div>
+        }
+</nav>
+
+
+<div id="mainCode">
+
+    <p id="question-text2">Programming Language:</p>
+    <p id="question2">@Model.ProgramingLanguage</p>
+    <p id="question-text">QUESTION:</p>
+    <p id="question">@Model.ProblemDefinition</p>
+
+    <form>
+        <!-- onsubmit="sendAJAX(event, showPopup)" action="/SaveFile" reset="false" -->
+
+        <button id="run-button" class="save-run" style="margin-left: 50px;">Run</button>
+
+        <button id="save-button" type="submit" class="save-run" style="margin-left: 10px;">Save</button>
+
+        <br>
+        <br>
+        <input id="solution-id" name="SolutionId" value="@Model.SolutionId" hidden />
+        <input id="fileName" name="FileName" value="Select A File To Load" readonly style="margin-left: 25px; text-align: center;">
+        @*<textarea id="fileContent" name="FileContent" rows="29" cols="150" style="margin-left: 25px;box-shadow: 9px 9px #2C7873; display: block;" placeholder="Write your code here..."></textarea>*@
+
+        <pre id="fileContent" style="width: 95%; height: 420px; margin-left: 25px; font-size: 14px;"></pre>
+
+    </form>
+
+    <table class="solve-table">
+        <tr class="solve-table">
+            <th>Number of Test Case</th>
+            <th>Status</th>
+        </tr>
+        <tr class="solve-table">
+            <td id="successful-tests">@Model.SuccessfulTestCount</td>
+            <td style="background-color: green; color: white;">Passed!!</td>
+        </tr>
+        <tr class="solve-table">
+            <td id="failed-tests">@(Model.TestCaseCount - Model.SuccessfulTestCount)</td>
+            <td style="background-color: red; color: white;">Failed!!</td>
+        </tr>
+        <tr class="solve-table">
+            <td><button id="myBtn" class="result-btn">Example Test Cases</button>
+            <td>
+            </td>
+        </tr>
+    </table>
+
+</div>
+
+<div id="myModal" class="modal">
+
+    <!-- Modal content -->
+    <div class="modal-content">
+        <span class="close">&times;</span>
+
+        <div class="flex-container">
+            <div class="box">Arguments</div>
+            <div class="box">Expected Output</div>
+            <div class="box">Your Output</div>
+        </div>
+
+        @foreach (var testCase in Model.TestCases)
+        {
+            <div class="flex-container">
+                <div class="box">@testCase.Arguments</div>
+                <div class="box">@testCase.ExpectedOutput</div>
+                <div class="box" id="testcase-@testCase.No"></div>
+            </div>
+        }
+    </div>
+</div>
+
+@section Scripts {
+    <script src="~/js/signalr/dist/browser/signalr.js"></script>
+    <script src="~/src-noconflict/ace.js" type="text/javascript" charset="utf-8"></script>
+
+
+    <script>
+        "use strict";
+
+        var runButton = document.getElementById("run-button");
+        var saveButton = document.getElementById("save-button");
+        var add_button = document.getElementById("add_file_button");
+        var solutionId = document.getElementById("solution-id").value;
+
+        var connection = //new signalR.HubConnectionBuilder().withUrl("https://localhost:5001/CompilerHub", { transport: signalR.HttpTransportType.LongPolling }).build();
+            new signalR.HubConnectionBuilder().withUrl("https://localhost:5001/ExecutionHub").build(); //44376
+
+        //Disable send button until connection is established
+        runButton.disabled = true;
+
+        runButton.addEventListener("click", function (event) {
+            runButton.disabled = true;
+            connection.invoke("CompileAndExecute", solutionId).catch(function (err) {
+                runButton.disabled = false;
+                return console.error(err.toString());
+            });
+            event.preventDefault();
+        });
+
+        connection.on("CompileAndExecute", function (result) {
+            runButton.disabled = false;
+            if (result.error)
+                alert(result.error);
+
+            var data = result.data;
+
+            document.getElementById("successful-tests").innerText = data.successfulTestCount;
+            document.getElementById("failed-tests").innerText = data.failedTestCount;   
+
+            for (var t of data.testCases) {
+                document.getElementById("testcase-" + t.no).innerText = t.userOutput;
+            }
+
+        });
+
+        connection.start().then(function () {
+            runButton.disabled = false;
+
+            connection.invoke("CreateEnvironment", solutionId).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+        }).catch(function (err) {
+            return console.error(err.toString());
+        });
+
+        $(add_button).click(function (e) { //on add input button click
+            e.preventDefault();
+
+            var file_name = document.getElementById("newfile_name").value;
+
+            connection.invoke("CreateFile", solutionId, file_name).catch(function (err) {
+                return console.error(err.toString());
+            });
+            
+            $("#file_sec").append(
+                '<div id="'+file_name+'" ><a href="/GetFile/' + file_name + '/' + solutionId +
+                '" class="files" this.style.color="red";">' + file_name +
+                '</a><span class="remove_field"><img src="/assets/x.png" width="20px" height="20px"></span></div>');
+
+            document.getElementById("newfile_name").value = "";                
+        });
+
+        $("#file_sec").on("click", ".remove_field", function (e) { //user click on remove text
+            e.preventDefault(); 
+
+            var file_name = $(this).parent('div')[0].id;
+
+            connection.invoke("DeleteFile", solutionId, file_name).catch(function (err) {
+                return console.error(err.toString());
+            });
+
+            $(this).parent('div').remove();
+        })        
+
+        saveButton.addEventListener("click", function (event) {
+            event.preventDefault();
+
+            var solutionId = document.getElementById("solution-id").value;
+            var fileName = document.getElementById("fileName").value;
+            var fileContent = editor.session.toString();
+
+            connection.invoke("SaveFile", solutionId, fileName, fileContent).catch(function (err) {
+                return console.error(err.toString());
+            });
+        });
+
+    </script>       
+
+    <script>
+        var editor = ace.edit("fileContent");
+        editor.setTheme("ace/theme/twilight");
+        editor.session.setMode("ace/mode/@Model.ProgramingLanguage.ToString().ToLower()");
+    </script>
+
+    <script>
+        $("nav").on("click", ".files", function (e) { //user click on remove text
+            e.preventDefault(); 
+
+            sendAJAX(e, openFile);
+        })
+
+
+        function openFile(data) {
+            var fileNameElem = document.getElementById("fileName");
+
+            fileNameElem.value = data.name;
+            editor.session.setValue(data.content);
+        }
+    </script>
+
+
+    <script>
+        // Get the modal
+        var modal = document.getElementById("myModal");
+
+        // Get the button that opens the modal
+        var btn = document.getElementById("myBtn");
+
+        // Get the <span> element that closes the modal
+        var span = document.getElementsByClassName("close")[0];
+
+        // When the user clicks the button, open the modal
+        btn.onclick = function () {
+            modal.style.display = "block";
+        }
+
+        // When the user clicks on <span> (x), close the modal
+        span.onclick = function () {
+            modal.style.display = "none";
+        }
+
+        // When the user clicks anywhere outside of the modal, close it
+        window.onclick = function (event) {
+            if (event.target == modal) {
+                modal.style.display = "none";
+            }
+        }
+    </script>
+
+}
+

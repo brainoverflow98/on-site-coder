@@ -1,0 +1,218 @@
+﻿@model WebApp.Models.Challenge.ChallengeCreationModel
+@{
+    ViewData["Title"] = "Create Challenge";
+}
+
+@section Styles {
+    <style>
+body {
+  background: linear-gradient(209.64deg, rgba(60, 72, 211, 0.75) 4.22%, rgba(76, 143, 239, 0.75) 63.76%, rgba(127, 240, 255, 0.75) 86.94%);
+  grid-template-areas:
+    "header header"
+    "nav nav"
+    "code code"
+    "footer footer";
+  grid-template-columns: 200px 1fr;
+  }
+
+* {
+  box-sizing: border-box;
+}
+
+input[type=text], select, textarea {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid #ccc;
+  border-radius: 4px;
+  resize: vertical;
+}
+
+label {
+  padding: 12px 12px 12px 0;
+  display: inline-block;
+}
+
+input[type=submit] {
+  background-color: #4CAF50;
+  color: white;
+  padding: 12px 20px;
+  border: none;
+  border-radius: 4px;
+  cursor: pointer;
+  float: right;
+}
+
+input[type=submit]:hover {
+  background-color: #45a049;
+}
+
+/* Responsive layout - when the screen is less than 600px wide, make the two columns stack on top of each other instead of next to each other */
+@@media screen and (max-width: 600px) {
+  .col-25, .col-75, input[type=submit] {
+    width: 100%;
+    margin-top: 0;
+  }
+}
+
+    </style>
+}
+
+<nav id="mainNav">
+    <div class="sidebar">
+    </div>
+</nav>
+
+
+
+<div id="mainCode" class="container2">
+    <form onsubmit="sendAJAX(event)" enctype="multipart/form-data">
+
+        <div class="row">
+            <div class="col-25">
+                <label for="">Challenge Name</label>
+            </div>
+            <div class="col-75">
+                <input asp-for="Name" placeholder="Write Challenge Name here...">
+            </div>
+        </div>
+        <br>
+        <div class="row">
+            <div class="col-25">
+                <label for="">Privacy</label>
+            </div>
+            <div class="col-75">
+                <select asp-for="PrivacyLevel" asp-items="typeof(ChallengePrivacyLevel).ToSelectList()"></select>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-25">
+                    <label for="">Privacy Domain</label>
+                </div>
+                <div class="col-75">
+                    <input asp-for="PrivacyDomain" placeholder="Specify a domain for privacy">
+                </div>
+            </div>
+            <div class="row">
+                <div class="col-25">
+                    <label for="">Due Date</label>
+                </div>
+                <div class="col-75">
+                    <br>
+                    <input asp-for="DueDate">
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-25">
+                    <label for="">Programming Language</label>
+                </div>
+                <div class="col-75">
+                    <select asp-for="ProgramingLanguage" asp-items="typeof(ProgramingLanguage).ToSelectList()"></select>
+                </div>
+            </div>
+            <br>
+            <div class="row">
+                <div class="col-25">
+                    <label for="">Question</label>
+                </div>
+                <div class="col-75">
+                    <textarea asp-for="ProblemDefinition" rows="8" cols="100" placeholder="Explain the problem details?"></textarea>
+                </div>
+            </div>
+
+            <div class="row">
+                <div class="col-25">
+                    <label for="">Challenge Files</label>
+                </div>
+                <div class="col-75">
+                    <div class="insert-file">
+
+                        <div id="fileAddTemplate">
+                            <div>
+                                <input asp-for="Files[0].Name" placeholder="File Name...">
+                                <textarea asp-for="Files[0].Content" placeholder="Content..." rows="20"></textarea>
+                                <select asp-for="Files[0].FileType" asp-items="typeof(FileType).ToSelectList()"></select>
+                                <br>
+                            </div>
+                        </div>
+                        <br>
+                    </div>
+                    <button id="add_file_btn">Add File</button><br />
+                </div>
+
+                <div class="row">
+                    <div class="col-25">
+                        <label> Add Test</label>
+                    </div>
+                    <div class="col-75">
+                        <div class="input_fields_wrap">
+                            <div id="testAddTemplate">
+                                <div>
+                                    <input asp-for="TestCases[0].Arguments" placeholder="Command line arguments...">
+                                    <textarea asp-for="TestCases[0].ExpectedOutput" placeholder="Expected output..."></textarea>
+                                    <label class="container">
+                                        Is Hidden
+                                        <input asp-for="TestCases[0].IsHidden">
+                                        <span class="checkmark"></span>
+                                    </label>
+                                    <br>
+                                </div>
+                            </div>
+                        </div>
+                        <button id="add_test_button">Add Test Case</button><br />
+                    </div>
+                </div>
+
+            </div>
+            <button type="submit">Create Challenge</button>
+        </div>
+    </form>
+</div>
+
+@section Scripts {
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var max_fields = 10; //maximum input boxes allowed
+            var wrapper = $(".input_fields_wrap"); //Fields wrapper
+            var add_button = $("#add_test_button"); //Add button ID
+            var testTemplate = $("#testAddTemplate");
+
+            var x = 1; //initlal text box count
+            $(add_button).click(function (e) { //on add input button click
+                e.preventDefault();
+                if (x < max_fields) { //max input box allowed
+                    $(wrapper).append(testTemplate.html().replace(/\[0\]/g, '[' + x + ']').replace(/<br>/g, '<a href="#" class="remove_field">Remove</a><br>'));
+                    x++; //text box increment
+                }
+            });
+
+            $(wrapper).on("click", ".remove_field", function (e) { //user click on remove text
+                e.preventDefault(); $(this).parent('div').remove(); x--;
+            })
+        });
+    </script>
+
+
+    <script type="text/javascript">
+        $(document).ready(function () {
+            var wrapper2 = $(".insert-file"); //Fields wrapper
+            var add_button2 = $("#add_file_btn"); //Add button ID
+            var fileTemplate = $("#fileAddTemplate");
+
+            var x = 1; //initlal text box count
+            $(add_button2).click(function (e) { //on add input button click
+                e.preventDefault();
+                if (x < 10) { //max input box allowed
+
+                    $(wrapper2).append(fileTemplate.html().replace(/\[0\]/g, '[' + x + ']').replace(/<br>/g, '<a href="#" class="remove_field2">Remove</a><br>'));
+                    x++; //text box increment
+                }
+            });
+
+            $(wrapper2).on("click", ".remove_field2", function (e) { //user click on remove text
+                e.preventDefault(); $(this).parent('div').remove(); x--;
+            })
+        });
+    </script>
+}
+

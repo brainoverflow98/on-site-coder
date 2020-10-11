@@ -1,0 +1,39 @@
+﻿@using Common.Helpers;
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>@ViewData["Title"] - WebApp</title>
+
+
+    @RenderSection("Styles", required: false)
+    
+    <link rel="stylesheet" type="text/css" href="~/css/styles.css">
+
+</head>
+<body>
+    <header id="pageHeader">
+        <div class="topnav">
+            <a href="/Explore">Explore</a>
+            <a href="/MyChallenges">My Challenges</a>
+            <a href="/MySolutions">My Solutions</a>
+            <a href="/Profile">Profile</a>            
+        </div>
+    </header>    
+
+    @RenderBody()
+
+    <footer id="pageFooter">
+        <a href="/Auth/Logout" class="logout-btn">
+            <img src="~/assets/logout.png" width="50px" height="50px"><br>
+            @User.DisplayName()
+        </a>
+    </footer>
+
+    <script src="~/js/jquery.js"></script>
+    <script type="text/javascript" src="~/js/ajaxFormSender.js"></script>
+    @RenderSection("Scripts", required: false)
+</body>
+</html>
